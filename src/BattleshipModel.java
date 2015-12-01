@@ -45,13 +45,17 @@ public class BattleshipModel {
 		for (int i = 0; i < shipToPlace.getLength(); i++) {
 			int row = startRow + i * dy;
 			int col = startCol + i * dx;
-			Ship toChange = (isPlayer1) ? board[row][col].P1Ship : board[row][col].P2Ship;
+			Ship locToChange = (isPlayer1) ? board[row][col].P1Ship : board[row][col].P2Ship;
 			
-			if (row < 0 || row > 9 || col < 0 || col > 9 || toChange != null) {
+			if (row < 0 || row > 9 || col < 0 || col > 9 || locToChange != null) {
 				shipToPlace = null;
 				return false;
 			} else {
-				toChange = shipToPlace;
+				if (isPlayer1) {
+					board[row][col].P1Ship = shipToPlace;
+				} else {
+					board[row][col].P2Ship = shipToPlace;
+				}
 			}
 		}
 		// incrementShipCount()
