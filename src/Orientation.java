@@ -1,4 +1,9 @@
-
+/**
+ * Orientation enum used for ship orientations
+ * 
+ * @author Tim Davis
+ * @author Kellan Nealy
+ */
 public enum Orientation {
 	DD (1, 1),
 	DU (1, -1),
