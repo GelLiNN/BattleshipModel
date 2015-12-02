@@ -69,20 +69,13 @@ public class Login extends Application {
                 public void handle(ActionEvent e) {
 
                     System.out.println("Welcome:" + " " + p1.getText()+" "+"&" + " " + p2.getText());
-                    System.out.println();
-                    System.out.println("Place your battle ships!");
-                    System.out.println();
-                    //actiontarget.setFill(Color.FIREBRICK);
+                    System.out.println("\nPlace your battle ships!\n");
+                    
                     actiontarget.setId("actiontarget");
                     actiontarget.setText("Welcome" + " " +p1.getText() + " " + "&" + " " + p2.getText());
-                    //BattleshipModel game =  new BattleshipModel ("Joe","Johnny");
-                    // PlayGame.startBattleship(p1.getText(), p2.getText());
-
+                    //Instantiate Battleship Model and begin gameplay
                     BattleshipModel game = new BattleshipModel(p1.getText(), p2.getText());
-                    //BattleshipModel game = new BattleshipModel(player1,player2);
-                    Login userLogin = new Login();  // instantiate Login to be able to print board
                     PlayGame playGame = new PlayGame();
-
                     playGame.runGame(p1.getText(), p2.getText(), game, playGame);
 
                     btn.setOnAction(new EventHandler<ActionEvent>() {
