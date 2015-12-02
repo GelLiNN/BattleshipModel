@@ -1,3 +1,7 @@
+/**
+ * @author Kellan Nealy
+ * @author Tim Davis
+ */
 import java.util.*;
 
 public class BattleshipModel {
@@ -14,7 +18,7 @@ public class BattleshipModel {
 	private static final int BOARD_HEIGHT = 10;
 	private static final String LETTERS = "ABCDEFGHIJ";
 	
-	//Constructor
+	// Constructor
 	public BattleshipModel(String player1, String player2) {
 		this.player1Name = player1;
 		this.player2Name = player2;
@@ -22,7 +26,7 @@ public class BattleshipModel {
 		player2ShipCount = 0;
 		isGameOver = false;
 		
-		//Create new board, and populate it with BoardSquares
+		// Create new board, and populate it with BoardSquares
 		board = new BoardSquare[BOARD_WIDTH][BOARD_HEIGHT];
 		for (int row = 0; row < BOARD_HEIGHT; row++) {
 			for (int col = 0; col < BOARD_WIDTH; col++) {
@@ -31,9 +35,9 @@ public class BattleshipModel {
 		}
 	}
 	
-	//ship should be 'A', 'B', 'C', or 'D'
-	//loc should be validated
-	//Orientation should be determined by the view/controller from user input
+	// ship should be 'A', 'B', 'C', or 'D'
+	// loc should be validated
+	// Orientation should be determined by the view/controller from user input
 	public boolean placeShip(boolean isPlayer1, char ship, String loc, Orientation o) {
 		Ship shipToPlace = getShip(ship);
 		int startRow = getRow(loc);
@@ -67,7 +71,7 @@ public class BattleshipModel {
 		return true;
 	}
 	
-	//returns "Hit", "Miss", "Hit and sunk <ship_name>", or "Unsuccessful"
+	// returns "Hit", "Miss", "Hit and sunk <ship_name>", or "Unsuccessful"
 	public String makeShot(boolean isPlayer1, String loc) {
 		int row = getRow(loc);
 		int col = getCol(loc);

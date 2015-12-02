@@ -114,12 +114,6 @@ public class Login extends Application {
      */
     public static void main(String[] args) {
         launch(args);
-        String player1 = "Joe";  // got an error when I tried using p1.getText()
-        String player2 = "Johnny"; // got an error when I tried using p2.getText()
-
-        BattleshipModel game = new BattleshipModel(player1, player2);
-        PlayGame playGame = new PlayGame();
-        playGame.runGame(player1, player2, game, playGame);
     }
 
 }
