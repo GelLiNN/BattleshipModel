@@ -7,7 +7,6 @@ import java.util.*;
  */
 public class PlayGame
 {
-
     /*
      * Method whoGoesFirst - method that decides which player goes first
      */
@@ -29,34 +28,13 @@ public class PlayGame
      */
     public boolean validateSquare (String in) {
         String[] validRowChar = {"A","B","C","D","E","F","G","H","I","J"}; // valid row
-        String[] validColNum = {"1","2","3","4","5","6","7","8","9","10"}; // valid column
+        int[] validColNum = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; // valid column
 
         String rowChar = in.substring(0,1); // get row from input string
-        String colNum = in.substring(1,in.length()); // get column from input string
+        String colNum = in.substring(1); // get column from input string
 
-        int i = 0;
-        boolean foundCharInRow = false;
-        while ( (!foundCharInRow) && (i < validRowChar.length) ) {
-            if (validRowChar[i].compareTo(rowChar) == 0 ) { // confirm row is valid if equals is zero
-                foundCharInRow = true;
-
-            }
-            i++;
-        }
-
-        int j = 0;
-        boolean foundNumInCol = false;
-        while ( (!foundNumInCol) && (j < validColNum.length) ) {
-            if ( validColNum[j].compareTo(colNum)  == 0 ) { // confirm column is valid if equals is zero
-                foundNumInCol = true;
-            }
-            j++;
-        }
-
-        if (foundCharInRow && foundNumInCol) {
-            return true;
-        }
-        else return false;
+        return Arrays.binarySearch(validRowChar, rowChar) >= 0 &&
+        		Arrays.binarySearch(validColNum, Integer.parseInt(colNum)) >= 0;
     }
 
     /*
@@ -84,25 +62,6 @@ public class PlayGame
         else return false;
     }
 
-    /* question - why static?
-    // will begin the master loop for the game, to be called from Login.java
-    //public static void startBattleship(){
-    public void startBattleship(){
-    // constructs a model object
-    // BattleshipModel model = new BattleshipModel(player1, player2);
-    // enter into master loop (contains setup and play modes)
-    // ask users if they want to play again?
-
-    PlayGame game = new PlayGame();  // fake constructor
-    // when I call the setup method, I need to pass the constructed BattleshipModel 
-    boolean keepGoing = true;
-    while (keepGoing) {
-    //this.setupGame("Joe"); // user can exit out of setup early
-    keepGoing = this.play(); // user can exit out of game early
-    System.out.println("Thanks for playing.");
-    }
-     */
-
     /*
      * Method ResetScreen - fills screen with backspaces to clear screen for user
      */
@@ -110,6 +69,39 @@ public class PlayGame
         for (int i = 0; i < 1000; i++) {
             System.out.println("\b");
         }
+    }
+
+    /**
+     * Method GetShipChar
+     * @param item - ship that is being placed
+     * @return - char representation of the ship
+     */
+    public char getShipChar (String item) { 
+        char s = ' ';
+        if (item.equals("aircraft carrier")) { s = 'A'; }
+        else if (item.equals("battleship"))  { s = 'B'; }
+        else if (item.equals("cruiser"))     { s = 'C'; }
+        else if (item.equals("destroyer1"))   { s = 'D'; }
+        else if (item.equals("destroyer2"))   { s = 'D'; }
+        return s;
+    }
+
+    public Orientation GetOrientation(String orientation) {
+        Orientation o = null;
+        switch (orientation) {
+            case "DD": o = Orientation.DD;
+            return o;
+
+            case "DU": o = Orientation.DU;
+            return o;
+
+            case "V":  o = Orientation.V;
+            return o;
+
+            case "H":  o = Orientation.H;
+            return o;
+        }
+        return o;
     }
 
     /*
@@ -130,78 +122,39 @@ public class PlayGame
 
         boolean validIn = false;
         boolean validMove = false;
-        char s = 'Z';   // initialize this for debugging
-        String shipName = "x"; // initialize this for debugging
 
         String[] ships = {"aircraft carrier","battleship","cruiser","destroyer1","destroyer2"};
         for (String item : ships) {
             validMove = false;
-            validIn = false;
-
-            while (!validMove) {
-                // check for valid input
-                while (!validIn) {
-                    if (item.equals("aircraft carrier")) { shipName = "aircraft carrier"; }
-                    else if (item.equals("battleship"))  { shipName = "battleship"; }
-                    else if (item.equals("cruiser"))     { shipName = "cruiser"; }
-                    else if (item.equals("destroyer1"))   { shipName = "destroyer1"; }
-                    else if (item.equals("destroyer2"))   { shipName = "destroyer2"; }
-
-                    System.out.print(playerID + "'s " + shipName + " ");
-                    userInput = console.nextLine();
-                    tokens = userInput.split("\\s+");
-
-                    //if user input two tokens, check if they are valid
-                    if (tokens.length == 2) {
-                        if (validateSquare(tokens[0])&& validateOrientation(tokens[1])) {
-                            validIn = true; // if valid, then set validIn to true to exit the loop
-                        }
-                        else {
-                            System.out.println("Invalid input. Please type <start square> and <orientation - DD DU V or H> and then press ENTER.");   
+            while (!validMove) {   
+                System.out.print(playerID + "'s " + item + ": ");
+                userInput = console.nextLine();
+                tokens = userInput.split("\\s+");
+                if (tokens.length == 2) 
+                {
+                    if (validateSquare(tokens[0]) && validateOrientation(tokens[1]))  {
+                    	
+                        validMove = game.placeShip(playerNum, getShipChar(item), tokens[0], GetOrientation(tokens[1]));
+                        if (!validMove) {
+                            System.out.println("Invalid placement. Try again.");
                         }
                     }
-                    else {
-                        System.out.println("Invalid input. Please type <start square> and <orientation - DD DU V or H> and then press ENTER.");   
+                    else 
+                    {
+                        System.out.println("Invalid placement. Try again. IM GAY");
                     }
                 }
-                // we have valid input...now send off to the model
-                wasSuccessful = false;
-                while (!wasSuccessful){
-                    //wasSuccessful = this.placeShip(true, 'A', tokens[0], Orientation.DD); // Question: how can I pass in "DD"
-                    if (item.equals("aircraft carrier")) { s = 'A'; }
-                    else if (item.equals("battleship"))  { s = 'B'; }
-                    else if (item.equals("cruiser"))     { s = 'C'; }
-                    else if (item.equals("destroyer1"))   { s = 'D'; }
-                    else if (item.equals("destroyer2"))   { s = 'D'; }
-
-                    Orientation o = null;
-                    switch (tokens[1]) {
-                        case "DD": o = Orientation.DD;
-                        break;
-                        case "DU": o = Orientation.DU;
-                        break;
-                        case "V":  o = Orientation.V;
-                        break;
-                        case "H":  o = Orientation.H;
-                        break;
-                    }
-
-                    wasSuccessful = game.placeShip(playerNum, s, tokens[0], o);
-                    if (!wasSuccessful) {
-                        System.out.println("Something went wrong in placement.");
-                    }
-                    else {
-                        System.out.println("Ship was placed successfully is " + wasSuccessful);
-                        validMove = true; // ship was successfully placed..now move to next ship
-                    }
+                else 
+                {
+                    System.out.println("Invalid input. Please type <start square> and <orientation - DD DU V or H> and then press ENTER.");   
                 }
+
             }
             System.out.println(); // if move is valid and ship placed, then user gets to see his/her board
             System.out.println ("Here's what your board looks like:");
             System.out.println(playerID + "'s defensive board.");
             printBoard(game.getDefensiveGrid(playerNum));
         }
-
     }
 
     /*
@@ -225,42 +178,42 @@ public class PlayGame
         while (!setup) {
             switch (tokens[0].toUpperCase()) {
                 case "M":
-                this.printMenuSetup(playerID);
+                	this.printMenuSetup(playerID);
                 break;
 
                 case "E":
-                System.out.println("OK. We'll exit setup.");
-                exit = true;
-                setup = true;
+	                System.out.println("OK. We'll exit setup.");
+	                exit = true;
+	                setup = true;
                 break;
 
                 case "S":
-                //Setup
-                place(playerID, playerNum, game);
-                setup = true;
+	                //Setup
+	                place(playerID, playerNum, game);
+	                setup = true;
                 break;
 
                 case "I":
-                printSetupInstructions();
+                	printSetupInstructions();
                 break;
 
                 case "O":
-                System.out.println(playerID + "'s offensive board.");
-                printBoard(game.getOffensiveGrid(playerNum));
+	                System.out.println(playerID + "'s offensive board.");
+	                printBoard(game.getOffensiveGrid(playerNum));
                 break;
 
                 case "D":
-                System.out.println(playerID + "'s defensive board.");
-                printBoard(game.getDefensiveGrid(playerNum));
+	                System.out.println(playerID + "'s defensive board.");
+	                printBoard(game.getDefensiveGrid(playerNum));
                 break;
 
                 case "R":
-                //call reset board
-                ResetScreen();
+	                //call reset board
+	                ResetScreen();
                 break;
 
                 default: 
-                System.out.println("Invalid input. Please try again.");
+                	System.out.println("Invalid input. Please try again.");
                 break;
 
             }
@@ -278,109 +231,103 @@ public class PlayGame
             return true;
     }
 
-    /*public String fire (String playerID, boolean playerNum,BattleshipModel game,Login userLogin) {
-    // loop
-    String shotResponse;
-
-    //scanner object
-    Scanner console = new Scanner(System.in);
-    String userInput;
-    String[] tokens = null;  
-    boolean validIn = false;
-
-    System.out.println(playerID + ": which square do you want to fire a missile at?");
-    userInput = console.nextLine();
-    tokens = userInput.split("\\s+");  //Hit", "Miss", "Hit and sunk <ship_name>", or "Unsuccessful"
-    return shotResponse = game.makeShot(playerNum, tokens[0]);
-    }*/
-
     /*
      * Method playGame - 
      */
     //public boolean playGame(BattleshipModelInterface battleShip) {
     public boolean play (String firstPlayerName, boolean firstPlayerBoolean, String secPlayerName, boolean secPlayerBoolean,BattleshipModel game ){
 
-        boolean exit = false;
         boolean userWantsToExit = false;
-        boolean currentTurnOver = false; // control variable for current turn
 
         Scanner console = new Scanner(System.in);
-        printMenuPlay(firstPlayerName,secPlayerName);
-
         String currentPlayer = firstPlayerName; // keep track of who has current turn
         String nextPlayer = secPlayerName;      // keep track of which player has next turn
         boolean currentTurn = true; // first person to go is TRUE
         String userInput = "";  //compiler was complaining that this string wasn't initialized
 
-        while (  (!userWantsToExit) && (!game.isGameOver()) ) {   // keep going until model tells us the game is over or the user wants to exit
-            System.out.println(currentPlayer + ": please enter a command.. "); // prompt current player to give a command
-            userInput = console.nextLine(); // get players command
-            String[] tokens = userInput.split("\\s+");  // split the input into tokens
+        while (!userWantsToExit && !game.isGameOver()) {   // keep going until model tells us the game is over or the user wants to exit
 
-            while (!currentTurnOver) {   // curent turn is over only when player shoots a valid shot and misses or shoots a valid shot and wins the game
+            boolean currentTurnOver = false; // control variable for current turn
+            while (!currentTurnOver) {   // current turn is over only when player shoots a valid shot and misses or shoots a valid shot and wins the game
+            	
+                printMenuPlay(firstPlayerName,secPlayerName);
+                System.out.println(currentPlayer + ": please enter a command.. "); // prompt current player to give a command
+                userInput = console.nextLine(); // get players command
+                String[] tokens = userInput.split("\\s+");  // split the input into tokens
+            	
                 switch (tokens[0].toUpperCase()) {
                     case "E": // user wants to exit
-                    System.out.println("OK. We'll exit the game."); 
-                    userWantsToExit = true; 
-                    currentTurnOver = true;
+	                    System.out.println("OK. We'll exit the game."); 
+	                    userWantsToExit = true; 
+	                    currentTurnOver = true;
                     break;
 
                     case "T":
-                    System.out.println(currentPlayer + " :take a shot by specifying a square A1 through J10 you have not yet fired on.");
-                    //System.out.println(currentPlayer + ": which square do you want to fire a missile at?");
-                    userInput = console.nextLine();
-                    String[] shotTokens = userInput.split("\\s+");  //Hit", "Miss", "Hit and sunk <ship_name>", or "Unsuccessful"
-                    if (validateSquare(shotTokens[0])) {
-                        String shotResponse = game.makeShot(currentTurn,shotTokens[0]);
-                        switch (shotResponse.charAt(0)) {  // case will always be capital
-                            case 'H':
-                            System.out.println(shotResponse);
-                            currentTurnOver = false; // it's only the other player's turn when current player misses or is unsuccessful
-                            case 'U':
-                            System.out.println(shotResponse);
-                            currentTurnOver = true; // it's only the other player's turn when current player misses or is unsuccessful
-                            break;
-                            case 'M':
-                            System.out.println(shotResponse);
-                            currentTurnOver = true;  // it's only the other player's turn when current player misses or is unsuccessful
-                        }
-                        break;
-                    }
-                    else {
-                        System.out.println("Invalid target.");
-                    }
+	                    boolean turnContinue = true;
+	                    while (turnContinue) {
+	                    	//print out the board first
+		                    System.out.println(currentPlayer + "'s offensive board.");
+		                    printBoard(game.getOffensiveGrid(currentTurn));
+	                        System.out.println("\n" + currentPlayer + " :take a shot by specifying a square A1 through J10 you have not yet fired on.");
+	                        userInput = console.nextLine();
+	                        
+	                        String[] shotTokens = userInput.split("\\s+");  //Hit", "Miss", "Hit and sunk <ship_name>", or "Unsuccessful"
+	                        if (validateSquare(shotTokens[0])) 
+	                        {
+	                            String shotResponse = game.makeShot(currentTurn,shotTokens[0]);
+	                            if (shotResponse.charAt(0) == 'H') {  // case will always be capital
+	                             
+	                                System.out.println("Congratulations: " + shotResponse);
+	                                turnContinue = true;
+	                                currentTurnOver = false;
+	                                if (game.isGameOver()) {
+	                                	System.out.println(currentPlayer + " is the winner!\n");
+	                                	return false;
+	                                }
+	                            }
+	                            else if (shotResponse.charAt(0) == 'U'){
+	                                // it's only the other player's turn when current player misses
+	
+	                                System.out.println(shotResponse);
+	                                System.out.println("You fired in the same spot. Please try again.");
+	                                turnContinue = true;
+	                                currentTurnOver = false; // it's only the other player's turn when current player misses
+	                            }
+	                            else if (shotResponse.charAt(0) == 'M'){
+	                               
+	                                System.out.println(shotResponse);
+	                                turnContinue = false;
+	                                currentTurnOver = true;  // it's only the other player's turn when current player misses
+	                             
+	                            }
+	                        } else {
+	                            System.out.println("Invalid target.");
+	                        }
+	                    }
                     break;
 
                     case "I": // display instructions
-                    printMenuPlay(currentPlayer,nextPlayer);
+                    	printMenuPlay(currentPlayer,nextPlayer);
                     break;
 
                     case "O": // display offensive board
-                    System.out.println(currentPlayer + "'s offensive board.");
-                    printBoard(game.getOffensiveGrid(currentTurn));
+	                    System.out.println(currentPlayer + "'s offensive board.");
+	                    printBoard(game.getOffensiveGrid(currentTurn));
                     break;
 
                     case "D": // display defensive board
-                    System.out.println(currentPlayer + "'s defensive board.");
-                    printBoard(game.getDefensiveGrid(currentTurn));
+	                    System.out.println(currentPlayer + "'s defensive board.");
+	                    printBoard(game.getDefensiveGrid(currentTurn));
                     break;
 
                     case "R": // reset screen to blank to remove board views
-                    ResetScreen();
+                    	ResetScreen();
                     break;
 
                     default: 
-                    System.out.println("Invalid input. Please try again.");
+                    	System.out.println("Invalid input. Please try again.");
                     break;
-                }
-
-                if (!userWantsToExit && !game.isGameOver() && !currentTurnOver) {
-                    System.out.println(currentPlayer + ": it's still your turn.");
-                    System.out.println("Enter command. T=take a shot, V=view offensive board, D=view Defensive board, E=exit, R=reset screen, I=Instructions.");
-                    userInput = console.nextLine();
-                    tokens = userInput.split("\\s+");
-
-                }
+                }          
             }
             if (!userWantsToExit && currentTurnOver) { // other player's turn as this player missed or was unsuccessful when he/she took a shot
                 currentTurnOver = false; // this needs to be false for the game to continue
@@ -391,7 +338,8 @@ public class PlayGame
                     currentPlayer = firstPlayerName;
                 }
 
-                if (currentTurn == true) {   // model uses true for player 1 and false for player2
+                if (currentTurn == true) {
+                	// model uses true for player 1 and false for player2
                     currentTurn = false;
                 }
                 else if (currentTurn == false) {
@@ -400,40 +348,8 @@ public class PlayGame
                 System.out.println(currentPlayer + ": it's your turn now.");
             }
         }
-
-        if (userWantsToExit){ // user doesn't want to continue
-            return false;
-        }
-        else 
-            return true; // game is over
+        return false; // we only get here if user wants to exit or game is over so false means stop the game
     }
-
-    //boolean endGame = isGameOver();
-    //String response = battleShip.makeShot(true, "A5");
-    //char[] gradVals   = battleShip.getOffensiveGrid(whichPlayer);
-    //char[] gradVals   = battleShip.getDefensiveGrid(whichPlayer);
-
-    //String response = <BattleshipModel_instance>.makeShot(true, "A5");
-    //boolean wasSuccessful = <BattleshipModel_instance>.placeShip(true, 'C', "C4", Orientation.DD);
-    //char[] gradVals = <BattleshipModel_instance>.getOffensiveGrid();
-    //char[] graduals = <BattleshipModel_instance>.getDefensiveGrid();              
-
-    /*
-     * Method continueGame is used to indicate players want to continue playing
-     * @return true - if players want to continue playing the game
-     * NOT USED
-
-    public boolean continueGame(){
-    return true;
-    }*/
-
-    /*
-     * Method giveWelcome prints a welcome to players.
-     * NOT USED
-    public void giveWelcome(){
-    System.out.println("Welcome to Battleship.");
-    System.out.println();
-    }*/
 
     public void runGame(String player1, String player2, BattleshipModel game, PlayGame thisGame) {
         String playerWithFirstTurn;       // was goesFirst
@@ -471,7 +387,7 @@ public class PlayGame
         }
         System.out.println("Thanks for playing.");
     }
-    
+
     //pre-condition, array has to have no null pointers
     public static void printBoard(char[] gridVals) {
 
@@ -565,5 +481,4 @@ public class PlayGame
         System.out.println("When Player1's turn is over, game prompts for a move from Player2");
         System.out.println("Play continues until one player has sunk all the other player's battleships.");
     }
-
 }

@@ -60,10 +60,16 @@ public class BattleshipModel {
 		for (int i = 0; i < shipToPlace.getLength(); i++) {
 			int row = startRow + i * dy;
 			int col = startCol + i * dx;
+			
+			if (row < 0 || row > 9 || col < 0 || col > 9) {
+				return false;
+			}
+			
 			Ship locToChange = (isPlayer1) ? board[row][col].P1Ship : board[row][col].P2Ship;
 			
-			if (row < 0 || row > 9 || col < 0 || col > 9 || locToChange != null) {
+			if (locToChange != null) {
 				shipToPlace = null;
+				deleteReferences(isPlayer1, ship);
 				return false;
 			} else {
 				if (isPlayer1) {
@@ -84,8 +90,8 @@ public class BattleshipModel {
 	 * @return New ship object
 	 */
 	private Ship getShip(char shipReference) {
-		if (shipReference == AircraftCarrier.REFERENCE) {
-			return new AircraftCarrier();
+		if (shipReference == Carrier.REFERENCE) {
+			return new Carrier();
 		} else if (shipReference == Battleship.REFERENCE) {
 			return new Battleship();
 		} else if (shipReference == Cruiser.REFERENCE) {
@@ -94,6 +100,23 @@ public class BattleshipModel {
 			return new Destroyer();
 		} else {
 			return null;
+		}
+	}
+	
+	private void deleteReferences(boolean isPlayer1, char ship) {
+		for (int row = 0; row < BOARD_HEIGHT; row ++) {
+			for (int col = 0; col < BOARD_WIDTH; col++) {
+				
+				if (isPlayer1 && board[row][col].P1Ship != null && 
+						board[row][col].P1Ship.getReference() == ship) {
+					board[row][col].P1Ship = null;
+					
+				} else if (!isPlayer1 && board[row][col].P2Ship != null && 
+						board[row][col].P2Ship.getReference() == ship) {
+
+					board[row][col].P2Ship = null;
+				}
+			}
 		}
 	}
 	
@@ -113,7 +136,7 @@ public class BattleshipModel {
 	 * Attempts to make a shot in the board
 	 * @param isPlayer1 True is Player 1's turn, False is Player 2's turn
 	 * @param loc The bound-validated location to shoot
-	 * @return "Hit", "Miss", "Hit and sunk <ship_name>", or "Unsuccessful"
+	 * @return "Hit", "Miss", "Hit and sunk <player_name>'s <ship_name>", or "Unsuccessful"
 	 */
 	public String makeShot(boolean isPlayer1, String loc) {
 		int row = getRow(loc);
@@ -141,12 +164,12 @@ public class BattleshipModel {
 					if (isPlayer1) {
 						player2ShipCount--;
 					} else {
-						player2ShipCount--;
+						player1ShipCount--;
 					}
 					isGameOver = player1ShipCount <= 0 || player2ShipCount <= 0;
 					
-					String playerName = (isPlayer1) ? player1Name : player2Name;
-					return "Hit and sunk " + playerName + "'s " + target.getReference() + "!";
+					String targetPlayerName = (isPlayer1) ? player1Name : player2Name;
+					return "Hit and sunk " + targetPlayerName + "'s " + target.getReference() + "!";
 				}
 			}
 		return "Hit";

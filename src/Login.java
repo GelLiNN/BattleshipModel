@@ -68,36 +68,47 @@ public class Login extends Application {
                 @Override
                 public void handle(ActionEvent e) {
 
+                    //hide login UI, clear the console
+                    primaryStage.close();
+                    for(int clear = 0 ; clear < 1000; clear++) {
+                        System.out.println("\b");
+                    }
+                	
                     System.out.println("Welcome:" + " " + p1.getText()+" "+"&" + " " + p2.getText());
-                    System.out.println("\nPlace your battle ships!\n");
-                    
+                    System.out.println();
+                    System.out.println("Place your battle ships!");
+                    System.out.println();
+                    //actiontarget.setFill(Color.FIREBRICK);
                     actiontarget.setId("actiontarget");
                     actiontarget.setText("Welcome" + " " +p1.getText() + " " + "&" + " " + p2.getText());
-                    //Instantiate Battleship Model and begin gameplay
+                    //BattleshipModel game =  new BattleshipModel ("Joe","Johnny");
+                    // PlayGame.startBattleship(p1.getText(), p2.getText());
+
                     BattleshipModel game = new BattleshipModel(p1.getText(), p2.getText());
+                    //BattleshipModel game = new BattleshipModel(player1,player2);
+                    Login userLogin = new Login();  // instantiate Login to be able to print board
                     PlayGame playGame = new PlayGame();
+
                     playGame.runGame(p1.getText(), p2.getText(), game, playGame);
-
+                    
+                    /*
                     btn.setOnAction(new EventHandler<ActionEvent>() {
-                            @Override
-                            public void handle(ActionEvent e) {
-                                primaryStage.hide();
+                        @Override
+                        public void handle(ActionEvent e) {
+                            primaryStage.hide();
 
-                                for(int clear = 0 ; clear < 1000; clear++) {
-                                    System.out.println("\b");
-                                }
-
-                                
+                            for(int clear = 0 ; clear < 1000; clear++) {
+                                System.out.println("\b");
                             }
-                        });
+                        }
+                    });
+                    */
                 }
-
             });
 
         Scene scene = new Scene(grid, 734, 400);
         primaryStage.setScene(scene);
-        scene.getStylesheets().add
-        (Login.class.getResource("login.css").toExternalForm());
+        scene.getStylesheets().add(Login.class.getResource("login.css").toExternalForm());
         primaryStage.show();
 
     }  
