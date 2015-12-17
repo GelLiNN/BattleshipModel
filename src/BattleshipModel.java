@@ -1,3 +1,8 @@
+import java.io.File;
+import java.util.Arrays;
+import java.util.Scanner;
+import java.util.TreeMap;
+
 /**
  * BattleshipModel class for handling battleship game state
  * 
@@ -14,10 +19,17 @@ public class BattleshipModel {
 	private int player2ShipCount;
 	private boolean isGameOver;
 	
-	// Private class constant values
-	private static final int BOARD_WIDTH = 10;
-	private static final int BOARD_HEIGHT = 10;
-	private static final String LETTERS = "ABCDEFGHIJ";
+	// Dynamic file path for configuration file, works for different operating systems!
+	private static final String CONF_PATH = System.getProperty("user.dir") + File.separator
+			+ "src" + File.separator + "battleship.bshp";
+	
+	// State values to be read from configuration
+	private int BOARD_WIDTH;
+	private int BOARD_HEIGHT;
+	private String LETTERS = "";	
+	public boolean alternateTurnOnHit;
+	public boolean diagShipPlacementEnabled;
+	private TreeMap<String, Integer> possibleShips;
 	
 	/**
 	 * Constructor for BattleshipModel
@@ -25,6 +37,12 @@ public class BattleshipModel {
 	 * @param player2 The name of Player 2
 	 */
 	public BattleshipModel(String player1, String player2) {
+		readStoreConfigs();
+		String[] letterStrings = getPossibleRowChars();
+		for (String letter : letterStrings) {
+			LETTERS += letter;
+		}
+		
 		// Create new board, and populate it with BoardSquares
 		board = new BoardSquare[BOARD_WIDTH][BOARD_HEIGHT];
 		for (int row = 0; row < BOARD_HEIGHT; row++) {
@@ -32,7 +50,6 @@ public class BattleshipModel {
 				board[row][col] = new BoardSquare();
 			}
 		}
-		
 		// Set initial game state
 		this.player1Name = player1;
 		this.player2Name = player2;
@@ -49,7 +66,7 @@ public class BattleshipModel {
 	 * @param o The orientation for the ship to be placed in, starting from loc
 	 * @return True if ship placement was successful, false otherwise
 	 */
-	public boolean placeShip(boolean isPlayer1, char ship, String loc, Orientation o) {
+	public boolean placeShip(boolean isPlayer1, String ship, String loc, Orientation o) {
 		Ship shipToPlace = getShip(ship);
 		int startRow = getRow(loc);
 		int startCol = getCol(loc);
@@ -60,16 +77,20 @@ public class BattleshipModel {
 		for (int i = 0; i < shipToPlace.getLength(); i++) {
 			int row = startRow + i * dy;
 			int col = startCol + i * dx;
+			Ship locToChange = null;
 			
-			if (row < 0 || row > 9 || col < 0 || col > 9) {
-				return false;
+			// check bounds first to avoid index exceptions
+			boolean isNotWithinBounds = (row < 0 || (row > BOARD_HEIGHT - 1)
+					|| col < 0 || (col > BOARD_WIDTH - 1));
+			
+			if (!isNotWithinBounds) {
+				locToChange = (isPlayer1) ? board[row][col].P1Ship : board[row][col].P2Ship;
 			}
 			
-			Ship locToChange = (isPlayer1) ? board[row][col].P1Ship : board[row][col].P2Ship;
-			
-			if (locToChange != null) {
+			// if we go out of the bounds or there is a ship in the way
+			if (isNotWithinBounds || locToChange != null) {
+				deleteReferences(isPlayer1, shipToPlace.getShipName());
 				shipToPlace = null;
-				deleteReferences(isPlayer1, ship);
 				return false;
 			} else {
 				if (isPlayer1) {
@@ -89,30 +110,20 @@ public class BattleshipModel {
 	 * @param shipReference Character ship reference
 	 * @return New ship object
 	 */
-	private Ship getShip(char shipReference) {
-		if (shipReference == Carrier.REFERENCE) {
-			return new Carrier();
-		} else if (shipReference == Battleship.REFERENCE) {
-			return new Battleship();
-		} else if (shipReference == Cruiser.REFERENCE) {
-			return new Cruiser();
-		} else if (shipReference == Destroyer.REFERENCE) {
-			return new Destroyer();
-		} else {
-			return null;
-		}
+	private Ship getShip(String shipName) {
+		return new Ship(shipName, possibleShips.get(shipName), shipName.toUpperCase().charAt(0));
 	}
 	
-	private void deleteReferences(boolean isPlayer1, char ship) {
+	private void deleteReferences(boolean isPlayer1, String shipName) {
 		for (int row = 0; row < BOARD_HEIGHT; row ++) {
 			for (int col = 0; col < BOARD_WIDTH; col++) {
 				
 				if (isPlayer1 && board[row][col].P1Ship != null && 
-						board[row][col].P1Ship.getReference() == ship) {
+						board[row][col].P1Ship.getShipName().equalsIgnoreCase(shipName)) {
 					board[row][col].P1Ship = null;
 					
 				} else if (!isPlayer1 && board[row][col].P2Ship != null && 
-						board[row][col].P2Ship.getReference() == ship) {
+						board[row][col].P2Ship.getShipName().equalsIgnoreCase(shipName)) {
 
 					board[row][col].P2Ship = null;
 				}
@@ -160,16 +171,16 @@ public class BattleshipModel {
 			} else {
 				target.damage++;
 				if (target.damage == target.getLength()) {
-					// ship is destroyed, decrement ship count
+					// ship is destroyed, decrement ship count and remove ship!
 					if (isPlayer1) {
 						player2ShipCount--;
 					} else {
 						player1ShipCount--;
 					}
 					isGameOver = player1ShipCount <= 0 || player2ShipCount <= 0;
-					
+					deleteReferences(isPlayer1, target.getShipName());
 					String targetPlayerName = (isPlayer1) ? player1Name : player2Name;
-					return "Hit and sunk " + targetPlayerName + "'s " + target.getReference() + "!";
+					return "Hit and sunk " + targetPlayerName + "'s " + target.getShipName() + "!";
 				}
 			}
 		return "Hit";
@@ -280,5 +291,95 @@ public class BattleshipModel {
 	 */
 	public boolean isGameOver() {
 		return isGameOver;
+	}
+	
+	private void readStoreConfigs() {
+		possibleShips = new TreeMap<String, Integer>();
+		try {
+			Scanner fileReader = new Scanner(new File(CONF_PATH));
+			while (fileReader.hasNextLine()) {
+				
+				String currentLine  = fileReader.nextLine();
+				if (currentLine.equalsIgnoreCase("[state]")) {
+					
+					// iterate until we get to empty line before the next stanza
+					while (currentLine.length() > 0 && fileReader.hasNextLine()) {
+						currentLine = fileReader.nextLine();
+						String[] settingVals = currentLine.split(":");
+						String settingName = settingVals[0].trim();
+						
+						if (settingName.equalsIgnoreCase("boardWidth")) {
+							this.BOARD_WIDTH = Integer.parseInt(settingVals[1].trim());
+						} else if (settingName.equalsIgnoreCase("boardHeight")) {
+							this.BOARD_HEIGHT = Integer.parseInt(settingVals[1].trim());
+						} else if (settingName.equalsIgnoreCase("alternateTurnOnHit")) {
+							this.alternateTurnOnHit = Boolean.parseBoolean(settingVals[1].trim());
+						} else if (settingName.equalsIgnoreCase("diagShipPlacement")) {
+							this.diagShipPlacementEnabled = Boolean.parseBoolean(settingVals[1].trim());
+						}
+					}
+				} else if (currentLine.equalsIgnoreCase("[ships]")) {
+					
+					// iterate until we get to empty line before the next stanza
+					while (currentLine.length() > 0 && fileReader.hasNextLine()) {
+						currentLine = fileReader.nextLine();
+						String[] settingVals = currentLine.split(":");
+						String shipName = settingVals[0].trim();
+						int shipLength = Integer.parseInt(settingVals[1].trim());
+						
+						// if it's a repeated ship name entry, we will append the ship number
+						// duplicate ships shall always start at 2
+						int shipNum = 2;
+						if (possibleShips.containsKey(shipName)) {
+							possibleShips.put(shipName + "_" + shipNum, shipLength);
+							shipNum++;
+						} else {
+							possibleShips.put(shipName, shipLength);
+							shipNum = 2;
+						}
+					}
+				}
+			}
+			fileReader.close();
+		} catch (Exception e) {
+			System.out.println("Error!  Could not read from configuration!!\n" + e.getMessage() + "\n");
+			e.printStackTrace(System.out);
+			System.exit(0);
+		}
+	}
+	
+	public String[] getPossibleRowChars() {
+		String[] possibleRowChars = new String[BOARD_HEIGHT];
+		char start = 'A';
+		for (int i = 0; i < BOARD_HEIGHT; i++) {
+			possibleRowChars[i] = "" + (char) (start + i);
+		}
+		return possibleRowChars;
+	}
+	
+	public int[] getPossibleColNums() {
+		int[] possibleColNums = new int[BOARD_WIDTH];
+		for (int i = 1; i <= BOARD_HEIGHT; i++) {
+			possibleColNums[i - 1] = i;
+		}
+		return possibleColNums;
+	}
+	
+	public String[] getPossibleOrientations() {
+		return (diagShipPlacementEnabled ? new String[]{"DD", "DU", "H", "V"} : new String[]{"H", "V"});
+	}
+	
+	public String[] getShipNames() {
+		String[] possibleShipNames = new String[possibleShips.keySet().size()];
+		int i = 0;
+		for (String ship : possibleShips.keySet()) {
+			possibleShipNames[i] = ship;
+			i++;
+		}
+		return possibleShipNames;
+	}
+	
+	public int getShipLength(String shipName) {
+		return possibleShips.get(shipName);
 	}
 }

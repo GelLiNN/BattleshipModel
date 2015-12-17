@@ -1,13 +1,19 @@
 
-public abstract class Ship {
+public class Ship {
+	private String shipName;
 	private int length;
 	private char reference;
 	public int damage;
 	
-	public Ship(int length, char reference) {
+	public Ship(String shipName, int length, char reference) {
+		this.shipName = shipName;
 		this.length = length;
 		this.reference = reference;
 		damage = 0;
+	}
+	
+	public String getShipName() {
+		return shipName;
 	}
 	
 	public int getLength() {

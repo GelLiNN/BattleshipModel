@@ -1,0 +1,20 @@
+# funorama config
+# The following are the configurable settings for Battleship!
+# They are organized into sections for easy editing.
+
+# Different values for the state of the game!
+[State]
+BoardHeight : 10
+BoardWidth : 10
+AlternateTurnOnHit : False
+DiagShipPlacement : True
+
+# Ships to be used in the game by each player!
+# Each ship should start with a unique letter unless it is a repeated ship
+# the format is "<ship_name> : <ship_length>"
+[Ships]
+Aircraft Carrier : 5
+Battleship : 4
+Cruiser : 3
+Destroyer : 2
+Destroyer : 2
